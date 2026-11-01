@@ -67,8 +67,9 @@ Não há framework de orquestração nem banco vetorial: o dataset é pequeno, c
 │   ├── history.py              # histórico local em JSON
 │   └── cli.py                  # interface de terminal
 ├── tests/                      # dados, políticas, tools e orquestração
-├── desafio - solução.md        # principais problemas e soluções
-├── desafio_tecnico_ai_eng_artefact.pdf  # enunciado (referência)
+├── assets/
+│   ├── desafio - solução.md    # principais problemas e soluções
+│   └── desafio_tecnico_ai_eng_artefact.pdf  # enunciado (referência)
 ├── Makefile
 ├── requirements.txt
 └── README.md
@@ -235,10 +236,13 @@ Dentro da CLI:
 
 ## Decisões técnicas
 
+- **Python + módulos da biblioteca padrão:** o projeto é pequeno e orientado a dados. A separação em módulos (`agent`, `tools`, `data_loader`, `policies` e `history`) mantém cada responsabilidade testável sem introduzir um framework de orquestração.
 - **Function calling em vez de RAG:** os dados são tabulares e as respostas exigem precisão. Consultas determinísticas evitam erros de similaridade e permitem filtros numéricos.
 - **Manual completo no system prompt:** o documento tem cerca de 3 mil tokens e cabe no contexto. A tool `consultar_politicas` serve para consultas direcionadas e para manter o modelo ancorado.
+- **Retrieval determinístico:** CSVs são carregados em memória com `pandas`, e o manual é normalizado em Markdown. A busca textual trata acentos, plural/singular, campos relevantes e filtros numéricos; não há banco vetorial porque o volume e o domínio não justificam sua complexidade.
+- **Prompt em camadas:** o system prompt define persona e escopo, `POLICY_OVERRIDES` reforça regras críticas e o manual fornece o conteúdo completo das políticas. A resposta final só é produzida depois das consultas necessárias às tools.
 - **Cálculos no código:** PIX, parcelas, frete e prazos são aritmética e regra de negócio; modelos pequenos erram contas longas.
-- **Provedor fixado:** o modelo é definido no `.env`, o provedor é fixado sem fallback e o reasoning é habilitado.
+- **LLM e provedor configuráveis:** a integração usa a API compatível da OpenRouter, com modelo, provedor e limite de iterações definidos no `.env`. O provedor fica fixado sem fallback para tornar o comportamento reproduzível; o reasoning é habilitado quando suportado pelo modelo.
 - **Validação com Pydantic + whitelist:** ferramentas desconhecidas e argumentos inválidos voltam como erro ao modelo, sem derrubar a conversa.
 - **CLI com `rich`:** as respostas em Markdown são renderizadas no terminal, incluindo tabelas e listas.
 
@@ -287,23 +291,34 @@ Conversas completas em [`examples/`](./examples):
 - Não há autenticação real; a consulta de pedido valida um identificador informado na conversa. Em produção seria necessário OTP, login ou WhatsApp verificado.
 - O histórico é um JSON local, sem suporte a concorrência.
 - O modelo gratuito pode variar em qualidade e disponibilidade.
+- O uso de modelos gratuitos pode atingir limites diários do provedor; a CLI informa esse caso e orienta aguardar a renovação ou configurar outro modelo.
 - O prazo legal usa a data estimada de entrega, não a data real de recebimento.
 - Para cidades fora de Campo Grande, o frete depende do CEP e não tem valor calculável com os dados disponíveis.
+
+### O que eu faria com mais tempo
+
+- Adicionaria observabilidade com logs estruturados, métricas de latência, tokens e erros do provedor, sem registrar dados pessoais.
+- Criaria testes de contrato com pelo menos um modelo real e avaliações para medir precisão, recusa fora de escopo e uso correto das ferramentas.
+- Substituiria o histórico JSON por armazenamento concorrente com controle de sessão e adicionaria autenticação real para consultas de pedidos.
+- Evoluiria o retrieval do manual para busca híbrida somente quando o volume de documentos justificasse essa complexidade.
 
 ---
 
 ## Documentação adicional
 
-- [`desafio - solução.md`](./desafio%20-%20solução.md) — principais problemas e soluções do projeto.
-- `desafio_tecnico_ai_eng_artefact.pdf` — enunciado original, mantido apenas como referência.
+- [`desafio - solução.md`](./assets/desafio%20-%20solução.md) — principais problemas e soluções do projeto.
+- [`desafio_tecnico_ai_eng_artefact.pdf`](./assets/desafio_tecnico_ai_eng_artefact.pdf) — enunciado original, mantido apenas como referência.
 
 ---
 
 ## Uso de assistentes de código
 
-- **Ferramenta:** assistente de código com LLM.
-- **Uso:** definição da arquitetura, implementação, revisão das consultas, auditoria dos CSVs e do PDF, testes e documentação.
-- **Validação:** os números e resultados foram conferidos contra os arquivos reais; os exemplos foram revisados com base nas regras e nos retornos das ferramentas.
+Usei duas ferramentas, com papéis complementares:
+
+- **OpenCode com modelos gratuitos:** utilizado para explorar a proposta, discutir alternativas de arquitetura, revisar a implementação e iterar sobre prompts, tools e testes. Os modelos gratuitos foram usados como apoio de raciocínio e geração, não como fonte de verdade dos dados.
+- **GitHub Copilot no VS Code:** utilizado para implementação incremental, navegação pelo código, ajustes de testes, tratamento de erros e documentação.
+
+Meu workflow foi: primeiro entender o dataset e as políticas; depois pedir sugestões e implementar mudanças pequenas; em seguida conferir cada comportamento contra os CSVs e o manual; por fim executar testes, revisar o diff e organizar os commits por funcionalidade. As decisões finais, a validação dos resultados e a revisão do código foram feitas por mim. Nenhuma credencial foi compartilhada com essas ferramentas, e a chave da OpenRouter permanece apenas no `.env` local.
 
 ---
 
