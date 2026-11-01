@@ -12,7 +12,7 @@ import os
 import unicodedata
 from typing import Any
 
-from openai import OpenAI
+from openai import OpenAI, RateLimitError
 from pydantic import ValidationError
 
 from .policies import policy_prompt
@@ -242,6 +242,12 @@ class Agent:
                         },
                         "reasoning": {"enabled": True},
                     },
+                )
+            except RateLimitError:
+                return (
+                    "O limite diário do atendimento foi atingido. "
+                    "Aguarde a renovação do limite ou configure outro modelo "
+                    "no arquivo .env para continuar."
                 )
             except Exception:
                 return (

@@ -4,6 +4,9 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
+import httpx
+from openai import RateLimitError
+
 from src.agent import TOOL_DEFINITIONS, Agent
 from src.data_loader import load_data
 from src.tools import StoreTools
@@ -160,6 +163,26 @@ def test_provider_failure_returns_friendly_message() -> None:
     answer = agent.respond([], "Olá")
 
     assert "indisponível agora" in answer
+
+
+def test_provider_rate_limit_returns_actionable_feedback() -> None:
+    agent = make_agent(
+        [
+            RateLimitError(
+                "rate limit",
+                response=httpx.Response(
+                    429,
+                    request=httpx.Request("POST", "https://openrouter.ai/api/v1"),
+                ),
+                body={"error": {"code": "free-models-per-day"}},
+            )
+        ]
+    )
+
+    answer = agent.respond([], "Olá")
+
+    assert "limite diário" in answer
+    assert "arquivo .env" in answer
 
 
 def test_agent_stops_after_max_iterations() -> None:
