@@ -14,10 +14,27 @@ from .history import load_history, save_history
 
 console = Console()
 
+ASCII_LOGO = r"""
+    .------------------------------------------------.
+    |              EMPORIO DA MUSICA                 |
+    |        atendimento inteligente para sua loja   |
+    '------------------------------------------------'
+"""
+
 
 def _print_answer(answer: str) -> None:
     """Renderiza Markdown no terminal em vez de mostrar os marcadores crus."""
     console.print(Markdown(answer))
+
+
+def _print_banner() -> None:
+    """Exibe a identidade visual da aplicação ao iniciar a CLI."""
+    console.print(ASCII_LOGO, style="bold cyan")
+    console.print("[bold]Empório da Música — Atendimento[/bold]")
+    console.print(
+        "Digite [bold]/novo[/bold] para limpar a conversa ou "
+        "[bold]/sair[/bold] para encerrar.\n"
+    )
 
 
 def main() -> None:
@@ -25,11 +42,7 @@ def main() -> None:
     agent = Agent()
     history = load_history()
 
-    console.print("[bold]Empório da Música — Atendimento[/bold]")
-    console.print(
-        "Digite [bold]/novo[/bold] para limpar a conversa ou "
-        "[bold]/sair[/bold] para encerrar.\n"
-    )
+    _print_banner()
 
     while True:
         try:

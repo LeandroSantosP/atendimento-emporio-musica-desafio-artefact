@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from src.agent import TOOL_DEFINITIONS, Agent
 from src.data_loader import load_data
 from src.tools import StoreTools
+from src.cli import ASCII_LOGO
 
 ROOT = Path(__file__).parents[1]
 DATA_DIR = ROOT / "data"
@@ -212,3 +213,8 @@ def test_examples_deliverable_has_three_to_five_conversations() -> None:
     assert 3 <= len(examples) <= 5
     contents = [path.read_text(encoding="utf-8").lower() for path in examples]
     assert any("devolução" in content and "pedido" in content for content in contents)
+
+
+def test_cli_has_ascii_brand_banner() -> None:
+    assert "EMPORIO DA MUSICA" in ASCII_LOGO
+    assert "atendimento inteligente" in ASCII_LOGO

@@ -165,6 +165,9 @@ Ou:
 python -m src.cli
 ```
 
+Ao iniciar, a CLI exibe um banner ASCII fictício do Empório da Música antes de
+abrir o atendimento.
+
 Dentro da CLI:
 
 | Comando | Ação |
