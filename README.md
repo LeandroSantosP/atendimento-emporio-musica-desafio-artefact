@@ -93,7 +93,7 @@ Os CSVs foram renomeados para nomes ASCII sem espaços. O loader ainda aceita os
 
 ```bash
 git clone <URL_DO_REPOSITORIO>
-cd ai-engineer-challange
+cd atendimento-emporio-musica-desafio-artefact
 ```
 
 **2. Crie e ative o ambiente virtual**
