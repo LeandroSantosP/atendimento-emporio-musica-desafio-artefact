@@ -1,7 +1,8 @@
-pandas>=2.2,<3
-pydantic>=2.7,<3
-python-dotenv>=1.0,<2
-openai>=1.40,<3
-pytest>=8.0,<9
-pypdf>=5.0,<7
-rich>=13.0,<15
+pandas==2.3.3
+pydantic==2.14.2
+python-dotenv==1.2.4
+openai==2.54.0
+httpx==0.28.1
+pytest==8.4.2
+pypdf==6.21.4
+rich==14.3.4

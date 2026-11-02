@@ -83,7 +83,7 @@ Os CSVs foram renomeados para nomes ASCII sem espaços. O loader ainda aceita os
 
 ### Pré-requisitos
 
-- Python 3.11+
+- Python 3.14.8 (a versão está registrada em [`.python-version`](./.python-version))
 - Chave de API do [OpenRouter](https://openrouter.ai/)
 - Opcional: `pdftotext` (Poppler) para regenerar o manual; sem ele o projeto usa `pypdf`
 
@@ -99,7 +99,7 @@ cd atendimento-emporio-musica-desafio-artefact
 **2. Crie e ative o ambiente virtual**
 
 ```bash
-python3 -m venv .venv
+python3.14 -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 ```
 
@@ -114,6 +114,11 @@ Se preferir sem Make:
 ```bash
 pip install -r requirements.txt
 ```
+
+O arquivo `requirements.txt` usa versões exatas para que a instalação seja
+reprodutível. Se você usa `pyenv` ou `uv`, a versão do arquivo
+`.python-version` pode ser selecionada automaticamente; caso contrário,
+confirme que `python --version` retorna `Python 3.14.8` após ativar o ambiente.
 
 **4. Configure as variáveis de ambiente**
 
