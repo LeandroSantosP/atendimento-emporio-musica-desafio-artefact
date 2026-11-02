@@ -1,3 +1,5 @@
+![Banner do agente de atendimento Empório da Música](./assets/Banner-Readme.png)
+
 # Empório da Música — Agente de Atendimento
 
 Agente de atendimento via terminal para a **Empório da Música**, loja fictícia de instrumentos musicais em Campo Grande/MS. Responde sobre catálogo, preços, estoque, pedidos, promoções, pagamento, frete, trocas e políticas da loja.
