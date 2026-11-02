@@ -1,52 +1,46 @@
-![Banner do agente de atendimento Empório da Música](./assets/Banner-Readme.png)
+![Empório da Música customer service agent banner](./assets/Banner-Readme.png)
 
-# Empório da Música — Agente de Atendimento
+# Empório da Música — Customer Service Agent
 
-Agente de atendimento via terminal para a **Empório da Música**, loja fictícia de instrumentos musicais em Campo Grande/MS. Responde sobre catálogo, preços, estoque, pedidos, promoções, pagamento, frete, trocas e políticas da loja.
+Terminal-based customer service agent for **Empório da Música**, a fictional musical-instrument store in Campo Grande, Brazil. It answers questions about the catalog, prices, inventory, orders, promotions, payment, shipping, returns, and store policies.
 
-O agente usa **function calling**: o modelo escolhe qual ferramenta consultar, mas preços, prazos, frete e regras de negócio são calculados no código. O modelo não inventa dados.
+The agent uses **function calling**: the model chooses which tool to query, while prices, deadlines, shipping, and business rules are calculated in code. The model does not invent data.
 
----
+## What it does
 
-## O que ele faz
+- Searches products by name, category, specification, or price range.
+- Reports availability, inventory, promotional prices, and active promotions.
+- Looks up orders only after validating the account holder's email or phone.
+- Calculates PIX, installments, and shipping.
+- Queries the store policy manual.
+- Politely refuses out-of-scope topics.
+- Does not expose personal data or confirm whether an order exists to an unauthorized person.
 
-- Consulta produtos por nome, categoria, especificação ou faixa de preço.
-- Informa disponibilidade, estoque, preço promocional e promoções ativas.
-- Consulta pedidos somente após validar e-mail ou telefone do titular.
-- Calcula PIX, parcelamento e frete.
-- Consulta o manual de políticas da loja.
-- Recusa educadamente assuntos fora do escopo.
-- Não expõe dados pessoais nem confirma se um pedido existe para quem não é o titular.
-
----
-
-## Arquitetura
+## Architecture
 
 ```text
 CLI (src/cli.py)
   │
   └── Agent (src/agent.py)
-        ├── system prompt + manual de políticas
-        ├── histórico da conversa
-        ├── loop de function calling
+        ├── system prompt + policy manual
+        ├── conversation history
+        ├── function-calling loop
         └── tools (src/tools.py)
               ├── data_loader.py → CSVs
-              └── policies.py    → manual em Markdown
+              └── policies.py    → Markdown manual
 ```
 
-### Fluxo de uma mensagem
+### Message flow
 
-1. O cliente digita a mensagem na CLI.
-2. O agente monta o contexto: persona + manual + histórico + nova mensagem.
-3. O LLM responde diretamente ou solicita uma ou mais ferramentas.
-4. O dispatcher valida a ferramenta e os argumentos, executa e devolve o resultado ao modelo.
-5. O ciclo se repete até o modelo produzir a resposta final, respeitando `MAX_TOOL_ITERATIONS`.
+1. The customer types a message in the CLI.
+2. The agent builds the context: persona, manual, history, and the new message.
+3. The LLM either responds directly or requests one or more tools.
+4. The dispatcher validates the tool and arguments, executes it, and returns the result to the model.
+5. The cycle repeats until the model produces the final response, subject to `MAX_TOOL_ITERATIONS`.
 
-Não há framework de orquestração nem banco vetorial: o dataset é pequeno, cabe em memória e o manual completo é injetado no prompt.
+There is no orchestration framework or vector database: the dataset is small enough to fit in memory, and the complete manual is injected into the prompt.
 
----
-
-## Estrutura do projeto
+## Project structure
 
 ```text
 .
@@ -58,275 +52,251 @@ Não há framework de orquestração nem banco vetorial: o dataset é pequeno, c
 │   ├── order_items.csv
 │   ├── promotions.csv
 │   ├── politicas_da_loja.pdf
-│   └── politicas.md            # manual limpo e versionado
-├── examples/                   # 5 conversas de exemplo
+│   └── politicas.md            # clean, versioned manual
+├── examples/                   # 5 example conversations
 ├── src/
-│   ├── agent.py                # loop, dispatcher e schemas das tools
-│   ├── tools.py                # consultas e cálculos determinísticos
-│   ├── data_loader.py          # carga e normalização dos CSVs
-│   ├── policies.py             # extração e consulta do manual
-│   ├── prompts.py              # persona e regras do agente
-│   ├── history.py              # histórico local em JSON
-│   └── cli.py                  # interface de terminal
-├── tests/                      # dados, políticas, tools e orquestração
+│   ├── agent.py                # loop, dispatcher, and tool schemas
+│   ├── tools.py                # deterministic queries and calculations
+│   ├── data_loader.py          # CSV loading and normalization
+│   ├── policies.py             # manual extraction and queries
+│   ├── prompts.py              # agent persona and rules
+│   ├── history.py              # local JSON history
+│   └── cli.py                  # terminal interface
+├── tests/                      # data, policy, tool, and orchestration tests
 ├── assets/
-│   ├── desafio - solução.md    # principais problemas e soluções
-│   └── desafio_tecnico_ai_eng_artefact.pdf  # enunciado (referência)
+│   ├── desafio - solução.md    # main problems and solutions
+│   └── desafio_tecnico_ai_eng_artefact.pdf  # challenge reference
 ├── Makefile
 ├── requirements.txt
 └── README.md
 ```
 
-Os CSVs foram renomeados para nomes ASCII sem espaços. O loader ainda aceita os nomes originais com o prefixo `desafio_tecnico_ai_eng - ` como fallback.
+The CSVs were renamed to ASCII names without spaces. The loader still accepts the original names with the `desafio_tecnico_ai_eng - ` prefix as a fallback.
 
----
+## Running the project
 
-## Como rodar
+### Prerequisites
 
-### Pré-requisitos
+- Python 3.14.8 (recorded in [`.python-version`](./.python-version))
+- An [OpenRouter](https://openrouter.ai/) API key
+- Optional: `pdftotext` (Poppler) to regenerate the manual; without it, the project uses `pypdf`
 
-- Python 3.14.8 (a versão está registrada em [`.python-version`](./.python-version))
-- Chave de API do [OpenRouter](https://openrouter.ai/)
-- Opcional: `pdftotext` (Poppler) para regenerar o manual; sem ele o projeto usa `pypdf`
+### Step by step
 
-### Passo a passo
-
-**1. Clone o projeto e entre na pasta**
+**1. Clone the project and enter its directory**
 
 ```bash
-git clone <URL_DO_REPOSITORIO>
+git clone <REPOSITORY_URL>
 cd atendimento-emporio-musica-desafio-artefact
 ```
 
-**2. Crie e ative o ambiente virtual**
+**2. Create and activate a virtual environment**
 
 ```bash
 python3.14 -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 ```
 
-**3. Instale as dependências**
+**3. Install dependencies**
 
 ```bash
 make install
 ```
 
-Se preferir sem Make:
+Or, without Make:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-O arquivo `requirements.txt` usa versões exatas para que a instalação seja
-reprodutível. Se você usa `pyenv` ou `uv`, a versão do arquivo
-`.python-version` pode ser selecionada automaticamente; caso contrário,
-confirme que `python --version` retorna `Python 3.14.8` após ativar o ambiente.
+`requirements.txt` pins exact versions for reproducible installation. If you use `pyenv` or `uv`, the `.python-version` file may select the version automatically; otherwise, confirm that `python --version` returns `Python 3.14.8` after activating the environment.
 
-**4. Configure as variáveis de ambiente**
+**4. Configure environment variables**
 
 ```bash
 cp .env.example .env
 ```
 
-Edite o `.env` e informe sua chave:
+Edit `.env` and add your key:
 
 ```env
 LLM_MODEL=nvidia/nemotron-3.5-super-vl:free
-OPENROUTER_API_KEY=sua-chave-aqui
+OPENROUTER_API_KEY=your-key-here
 OPENROUTER_PROVIDER=nvidia
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 MAX_TOOL_ITERATIONS=5
 REFERENCE_DATE=2026-02-18
 ```
 
-| Variável | Obrigatória | Uso |
+| Variable | Required | Purpose |
 |---|---|---|
-| `OPENROUTER_API_KEY` | Sim | Autenticação no OpenRouter |
-| `LLM_MODEL` | Não | Modelo usado; precisa suportar tool calling |
-| `OPENROUTER_PROVIDER` | Não | Provedor fixado, sem fallback |
-| `MAX_TOOL_ITERATIONS` | Não | Limite do loop de ferramentas |
-| `REFERENCE_DATE` | Não | Data usada nos prazos de devolução/troca |
+| `OPENROUTER_API_KEY` | Yes | OpenRouter authentication |
+| `LLM_MODEL` | No | Model used; it must support tool calling |
+| `OPENROUTER_PROVIDER` | No | Pinned provider, without fallback |
+| `MAX_TOOL_ITERATIONS` | No | Tool-loop limit |
+| `REFERENCE_DATE` | No | Date used for return and exchange deadlines |
 
-`REFERENCE_DATE=2026-02-18` é uma data de demonstração. Em produção, use a data atual ou remova a variável.
+`REFERENCE_DATE=2026-02-18` is a demonstration date. In production, use the current date or remove the variable.
 
-**5. Rode os testes**
+**5. Run the tests**
 
 ```bash
 make test
 ```
 
-Ou:
+Or:
 
 ```bash
 pytest
 ```
 
-**6. Inicie o agente**
+**6. Start the agent**
 
 ```bash
 make run
 ```
 
-Ou:
+Or:
 
 ```bash
 python -m src.cli
 ```
 
-Ao iniciar, a CLI exibe um banner ASCII fictício do Empório da Música antes de
-abrir o atendimento.
+On startup, the CLI displays a fictional Empório da Música ASCII banner before opening the conversation.
 
-Dentro da CLI:
+Inside the CLI:
 
-| Comando | Ação |
+| Command | Action |
 |---|---|
-| `/novo` | Limpa a conversa atual |
-| `/sair` | Encerra o atendimento |
+| `/novo` | Clears the current conversation |
+| `/sair` | Ends the conversation |
 
-### Outros comandos
+### Other commands
 
-| Comando | Ação |
+| Command | Action |
 |---|---|
-| `make check` | Compila `src/` e `tests/` e roda a suíte |
-| `make test-verbose` | Executa os testes com detalhes |
-| `make policies` | Regenera `data/politicas.md` a partir do PDF |
-| `make clean` | Remove caches locais |
+| `make check` | Compiles `src/` and `tests/` and runs the suite |
+| `make test-verbose` | Runs tests with details |
+| `make policies` | Regenerates `data/politicas.md` from the PDF |
+| `make clean` | Removes local caches |
 
----
+## Tools
 
-## Ferramentas
-
-| Ferramenta | Parâmetros | Uso |
+| Tool | Parameters | Purpose |
 |---|---|---|
-| `buscar_produtos` | `termo?`, `categoria?`, `preco_max?`, `incluir_indisponiveis?`, `limite?` | Catálogo, preço efetivo, estoque, promoção e disponibilidade |
-| `consultar_pedido` | `id_pedido`, `identificador_cliente` | Status, itens, rastreio e prazos, após validar e-mail ou telefone |
-| `consultar_promocoes` | `produto?`, `limite?` | Somente promoções ativas |
-| `consultar_condicoes` | `valor`, `tem_promocao?`, `cidade?` | PIX, parcelamento e frete |
-| `consultar_politicas` | `topico` | Horário, pagamento, troca, devolução, garantia etc. |
+| `buscar_produtos` | `termo?`, `categoria?`, `preco_max?`, `incluir_indisponiveis?`, `limite?` | Catalog, effective price, inventory, promotion, and availability |
+| `consultar_pedido` | `id_pedido`, `identificador_cliente` | Status, items, tracking, and deadlines after email or phone validation |
+| `consultar_promocoes` | `produto?`, `limite?` | Active promotions only |
+| `consultar_condicoes` | `valor`, `tem_promocao?`, `cidade?` | PIX, installments, and shipping |
+| `consultar_politicas` | `topico` | Opening hours, payment, exchanges, returns, warranty, and more |
 
-### Comportamento importante
+### Important behavior
 
-- **Busca:** ignora acentos e maiúsculas, trata plural/singular (`violões` → `violao`) e pesquisa em nome, descrição, categoria e especificações.
-- **Disponibilidade:** `disponivel`, `sem_estoque`, `descontinuado` ou `em_breve`. Listagens amplas escondem indisponíveis; busca por modelo específico mostra o produto com um aviso.
-- **Promoções:** somente `is_active=1`. Promoção vencida nunca é oferecida.
-- **Pedidos:** aceita apenas e-mail ou telefone, comparando os dígitos. Nome não é aceito. Pedido inexistente e dados incorretos retornam a mesma mensagem genérica.
-- **Prazos:** calculados a partir da data estimada de entrega e da `REFERENCE_DATE`.
-- **Pagamento:** PIX de 5% não incide sobre preço já promocional. Parcelamento segue a seção 3.1 do manual.
-- **Frete:** só Campo Grande tem valor fixo. Para outras cidades, o agente pede o CEP e não inventa o valor.
+- **Search:** ignores accents and case, handles singular/plural (`violões` → `violao`), and searches names, descriptions, categories, and specifications.
+- **Availability:** `disponivel`, `sem_estoque`, `descontinuado`, or `em_breve`. Broad listings hide unavailable products; a search for a specific model shows it with a warning.
+- **Promotions:** only `is_active=1`. Expired promotions are never offered.
+- **Orders:** accepts email or phone only and compares digits. Names are not accepted. Missing orders and incorrect details return the same generic message.
+- **Deadlines:** calculated from the estimated delivery date and `REFERENCE_DATE`.
+- **Payment:** the 5% PIX discount does not apply to an already promotional price. Installments follow section 3.1 of the manual.
+- **Shipping:** Campo Grande has a fixed price only. For other cities, the agent asks for the ZIP code and does not invent a price.
 
----
+## Business rules and data
 
-## Regras de negócio e dados
-
-| Tema | Tratamento |
+| Topic | Handling |
 |---|---|
-| Produto ativo com estoque zero | `disponibilidade=sem_estoque`; não aparece em listagens amplas |
-| Produto descontinuado ou em breve | Nunca é tratado como vendável |
-| Promoções | Apenas ativas; preço original, percentual e preço promocional são explícitos |
-| Total do pedido | `orders.total_brl` é o valor oficial; não é recalculado pela soma dos itens |
-| Datas ausentes | `NaT`/`NaN` são convertidos para `null` no JSON |
-| E-mail duplicado | Dois clientes compartilham o mesmo e-mail; nesse caso o telefone é exigido |
-| Manual em PDF | Extraído uma vez, limpo e versionado em `data/politicas.md` |
-| Contato da loja | `(67) 3341-4444` e `contato@emporiodamusica.com.br` |
-| Nome dos arquivos | CSVs com nomes ASCII; fallback para os nomes originais |
+| Active product with zero inventory | `availability=sem_estoque`; hidden from broad listings |
+| Discontinued or coming-soon product | Never treated as sellable |
+| Promotions | Active only; original price, percentage, and promotional price are explicit |
+| Order total | `orders.total_brl` is the official value and is not recalculated from item sums |
+| Missing dates | `NaT`/`NaN` are converted to `null` in JSON |
+| Duplicate email | Two customers share an email; the phone is required in that case |
+| PDF manual | Extracted once, cleaned, and versioned in `data/politicas.md` |
+| Store contact | `(67) 3341-4444` and `contato@emporiodamusica.com.br` |
+| File names | ASCII CSV names, with fallback to the original names |
 
-### Suposições documentadas
+### Documented assumptions
 
-- O prazo de devolução/troca usa `estimated_delivery`, pois o dataset não traz a data real de recebimento.
-- Pedidos são tratados como compras online para o direito de arrependimento.
-- Só Campo Grande é considerada região metropolitana para a regra de frete.
-- A seção 3.1 prevalece sobre a tabela resumida da seção 3 no parcelamento.
-- Frete grátis em Campo Grande vale para compras **acima** de R$ 500.
-- O produto 130 (`em_breve`) aparece em pedidos: inconsistência da base, tratada como não vendável no catálogo.
+- The return/exchange period uses `estimated_delivery` because the dataset has no actual receipt date.
+- Orders are treated as online purchases for the right of withdrawal.
+- Only Campo Grande is considered part of the metropolitan area for shipping rules.
+- Section 3.1 takes precedence over the summary table in section 3 for installments.
+- Free shipping in Campo Grande applies to purchases **above** R$ 500.
+- Product 130 (`em_breve`) appears in orders: this data inconsistency is handled as not sellable in the catalog.
 
----
+## Technical decisions
 
-## Decisões técnicas
+- **Python + standard-library modules:** the project is small and data-oriented. Separating `agent`, `tools`, `data_loader`, `policies`, and `history` keeps each responsibility testable without introducing an orchestration framework.
+- **Function calling instead of RAG:** the data is tabular and answers require precision. Deterministic queries avoid similarity errors and support numeric filters.
+- **Complete manual in the system prompt:** the document is about 3,000 tokens and fits in context. The `consultar_politicas` tool supports targeted queries and keeps the model grounded.
+- **Deterministic retrieval:** CSVs are loaded into memory with `pandas`, and the manual is normalized into Markdown. Text search handles accents, singular/plural, relevant fields, and numeric filters; there is no vector database because the volume and domain do not justify its complexity.
+- **Layered prompt:** the system prompt defines persona and scope, `POLICY_OVERRIDES` reinforces critical rules, and the manual provides the complete policy content. The final response is produced only after the required tool queries.
+- **Calculations in code:** PIX, installments, shipping, and deadlines are arithmetic and business rules; small models often get long calculations wrong.
+- **Configurable LLM and provider:** the integration uses the OpenRouter-compatible API, with model, provider, and iteration limit defined in `.env`. The provider is pinned without fallback for reproducibility; reasoning is enabled when supported by the model.
+- **Pydantic validation + whitelist:** unknown tools and invalid arguments are returned to the model as errors without crashing the conversation.
+- **CLI with `rich`:** Markdown responses are rendered in the terminal, including tables and lists.
 
-- **Python + módulos da biblioteca padrão:** o projeto é pequeno e orientado a dados. A separação em módulos (`agent`, `tools`, `data_loader`, `policies` e `history`) mantém cada responsabilidade testável sem introduzir um framework de orquestração.
-- **Function calling em vez de RAG:** os dados são tabulares e as respostas exigem precisão. Consultas determinísticas evitam erros de similaridade e permitem filtros numéricos.
-- **Manual completo no system prompt:** o documento tem cerca de 3 mil tokens e cabe no contexto. A tool `consultar_politicas` serve para consultas direcionadas e para manter o modelo ancorado.
-- **Retrieval determinístico:** CSVs são carregados em memória com `pandas`, e o manual é normalizado em Markdown. A busca textual trata acentos, plural/singular, campos relevantes e filtros numéricos; não há banco vetorial porque o volume e o domínio não justificam sua complexidade.
-- **Prompt em camadas:** o system prompt define persona e escopo, `POLICY_OVERRIDES` reforça regras críticas e o manual fornece o conteúdo completo das políticas. A resposta final só é produzida depois das consultas necessárias às tools.
-- **Cálculos no código:** PIX, parcelas, frete e prazos são aritmética e regra de negócio; modelos pequenos erram contas longas.
-- **LLM e provedor configuráveis:** a integração usa a API compatível da OpenRouter, com modelo, provedor e limite de iterações definidos no `.env`. O provedor fica fixado sem fallback para tornar o comportamento reproduzível; o reasoning é habilitado quando suportado pelo modelo.
-- **Validação com Pydantic + whitelist:** ferramentas desconhecidas e argumentos inválidos voltam como erro ao modelo, sem derrubar a conversa.
-- **CLI com `rich`:** as respostas em Markdown são renderizadas no terminal, incluindo tabelas e listas.
+## Tests
 
----
-
-## Testes
-
-A suíte usa os dados locais e um cliente fake; nenhum teste chama o provedor real.
+The suite uses local data and a fake client; no test calls the real provider.
 
 ```bash
 make check
 ```
 
-Cobertura principal:
+Main coverage includes:
 
-- integridade dos CSVs, sem duplicatas ou chaves órfãs;
-- disponibilidade derivada de status e estoque;
-- JSON sem `NaT`/`nan`;
-- seções, subseções, aliases e fallback do manual;
-- busca com acento, plural, categoria, especificações e código de modelo;
-- promoções ativas e preço efetivo;
-- titularidade por e-mail/telefone, e-mail duplicado e mensagem genérica;
-- itens do pedido e prazos de 7/30/90 dias;
-- PIX, parcelamento e frete;
-- orquestração do agente: execução de tool, argumentos inválidos, falha do provedor e limite de iterações.
+- CSV integrity, without duplicates or orphan keys;
+- availability derived from status and inventory;
+- JSON without `NaT`/`nan`;
+- manual sections, subsections, aliases, and fallback;
+- search with accents, plurals, categories, specifications, and model codes;
+- active promotions and effective prices;
+- ownership by email/phone, duplicate email, and generic messages;
+- order items and 7/30/90-day deadlines;
+- PIX, installments, and shipping;
+- agent orchestration: tool execution, invalid arguments, provider failure, and iteration limit.
 
----
+## Interaction examples
 
-## Exemplos de interação
+Complete conversations are available in [`examples/`](./examples):
 
-Conversas completas em [`examples/`](./examples):
-
-| Arquivo | Cenário |
+| File | Scenario |
 |---|---|
-| `01_catalogo.md` | Violões disponíveis até R$ 1.000 |
-| `02_info_loja.md` | Endereço e horário da loja |
-| `03_preco_promocao.md` | Preço, promoção e cálculo de PIX/parcelas |
-| `04_devolucao.md` | Pedido + política + prazo de arrependimento |
-| `05_fora_escopo.md` | Recusa de acessórios e redirecionamento |
+| `01_catalogo.md` | Available guitars up to R$ 1,000 |
+| `02_info_loja.md` | Store address and opening hours |
+| `03_preco_promocao.md` | Price, promotion, and PIX/installment calculation |
+| `04_devolucao.md` | Order, policy, and withdrawal deadline |
+| `05_fora_escopo.md` | Accessory refusal and redirection |
 
----
+## Known limitations
 
-## Limitações conhecidas
+- Search is textual, not semantic; vague questions depend on product descriptions and specifications.
+- There is no real authentication; order lookup validates an identifier provided in the conversation. Production would require OTP, login, or verified WhatsApp.
+- History is local JSON without concurrency support.
+- Free models may vary in quality and availability.
+- Free models may hit the provider's daily limits; the CLI reports this and recommends waiting for renewal or configuring another model.
+- The legal period uses the estimated delivery date, not the actual receipt date.
+- For cities outside Campo Grande, shipping depends on the ZIP code and cannot be calculated from the available data.
 
-- A busca é textual, não semântica; perguntas vagas dependem da descrição e das especificações dos produtos.
-- Não há autenticação real; a consulta de pedido valida um identificador informado na conversa. Em produção seria necessário OTP, login ou WhatsApp verificado.
-- O histórico é um JSON local, sem suporte a concorrência.
-- O modelo gratuito pode variar em qualidade e disponibilidade.
-- O uso de modelos gratuitos pode atingir limites diários do provedor; a CLI informa esse caso e orienta aguardar a renovação ou configurar outro modelo.
-- O prazo legal usa a data estimada de entrega, não a data real de recebimento.
-- Para cidades fora de Campo Grande, o frete depende do CEP e não tem valor calculável com os dados disponíveis.
+### What I would do with more time
 
-### O que eu faria com mais tempo
+- Add observability with structured logs and latency, token, and provider-error metrics, without recording personal data.
+- Create contract tests with at least one real model and evaluations for accuracy, out-of-scope refusal, and correct tool usage.
+- Replace JSON history with concurrent storage and session control, and add real authentication for order lookups.
+- Evolve manual retrieval to hybrid search only when document volume justifies the added complexity.
 
-- Adicionaria observabilidade com logs estruturados, métricas de latência, tokens e erros do provedor, sem registrar dados pessoais.
-- Criaria testes de contrato com pelo menos um modelo real e avaliações para medir precisão, recusa fora de escopo e uso correto das ferramentas.
-- Substituiria o histórico JSON por armazenamento concorrente com controle de sessão e adicionaria autenticação real para consultas de pedidos.
-- Evoluiria o retrieval do manual para busca híbrida somente quando o volume de documentos justificasse essa complexidade.
+## Additional documentation
 
----
+- [`desafio - solução.md`](./assets/desafio%20-%20solução.md) — main project problems and solutions.
+- [`desafio_tecnico_ai_eng_artefact.pdf`](./assets/desafio_tecnico_ai_eng_artefact.pdf) — original challenge statement, retained for reference.
 
-## Documentação adicional
+## Use of coding assistants
 
-- [`desafio - solução.md`](./assets/desafio%20-%20solução.md) — principais problemas e soluções do projeto.
-- [`desafio_tecnico_ai_eng_artefact.pdf`](./assets/desafio_tecnico_ai_eng_artefact.pdf) — enunciado original, mantido apenas como referência.
+I used two tools with complementary roles:
 
----
+- **OpenCode with free models:** used to explore the proposal, discuss architecture alternatives, review the implementation, and iterate on prompts, tools, and tests. Free models supported reasoning and generation; they were not the source of truth for the data.
+- **GitHub Copilot in VS Code:** used for incremental implementation, code navigation, test adjustments, error handling, and documentation.
 
-## Uso de assistentes de código
+My workflow was: first understand the dataset and policies; then request suggestions and implement small changes; next verify each behavior against the CSVs and manual; finally run tests, review the diff, and organize commits by feature. I made the final decisions, validated the results, and reviewed the code. No credentials were shared with these tools, and the OpenRouter key remains only in the local `.env`.
 
-Usei duas ferramentas, com papéis complementares:
-
-- **OpenCode com modelos gratuitos:** utilizado para explorar a proposta, discutir alternativas de arquitetura, revisar a implementação e iterar sobre prompts, tools e testes. Os modelos gratuitos foram usados como apoio de raciocínio e geração, não como fonte de verdade dos dados.
-- **GitHub Copilot no VS Code:** utilizado para implementação incremental, navegação pelo código, ajustes de testes, tratamento de erros e documentação.
-
-Meu workflow foi: primeiro entender o dataset e as políticas; depois pedir sugestões e implementar mudanças pequenas; em seguida conferir cada comportamento contra os CSVs e o manual; por fim executar testes, revisar o diff e organizar os commits por funcionalidade. As decisões finais, a validação dos resultados e a revisão do código foram feitas por mim. Nenhuma credencial foi compartilhada com essas ferramentas, e a chave da OpenRouter permanece apenas no `.env` local.
-
----
-
-Projeto desenvolvido exclusivamente para fins de avaliação técnica.
+This project was developed exclusively for technical evaluation.
